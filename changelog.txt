@@ -1,0 +1,61 @@
+Release 2.0
+
+Refactoring: Validator -> DaBase_Validator
+Refactoring: DaBase_Db -> DaBase_Connection
+Added: DaBase_Router new rules to find collection/objects class and table
+
+Release 1.7
+
+Added: DaBase_Tree_Collection and DaBase_Tree_Node - Nested Sets structure
+Added: Auto rollback transaction if query failed
+Added: DaBase_Collection save and load filter status methods
+Fixed: Reset DaBase_Collection filters after CRUD methods
+
+Release 1.6
+
+Refactoring: Rename DaBase_Getter to DaBase_Collection
+Refactoring: Delete DaBase_Model
+Refactoring: Make DaBase_Object independ from DaBase_Collection
+Refactoring: move DaBase_Object CRUD methods to DaBase_Collection
+
+Release 1.5
+
+* Added: PostgreSQL support
+* Fixed: quoting objects that have __toString method
+
+Release 1.4
+
+* Added: Conditions extending support in DaBase_Getter (OR, (...), and any others)
+* Added: Auto-clear cache support (DaBase_Db automatically recognize if some table 
+         was updated and clears it's cache)
+* Added: MySQL charset for connection
+* Added: Custom parent join field for DaBase_Getter::append
+
+Release 1.3
+
+* CRITICAL: DaBase_Model disabling editing properties by __call(...)
+* Refactoring: DaBase_Getter order method renamed to orderBy
+* Refactoring: DaBase_Object unset default id property
+* Fixed: independing DaBase from DaBase_Db constants values
+* Fixed: quoting numeric strings
+* Fixed: quoting NULL values
+* Added: DaBase_Getter::groupBy method
+* Added: DaBase_Getter append as ONE TO ONE option
+* Added: setting DaBase_Db connection charset
+* Added: init Getter by table name
+* Modified: DaBase_Object::insert($checkId=false)
+
+Release 1.2
+
+* Added: custom DaBase_Router names convention configuration
+* Refactoring: class Model renamed to DaBase_Model
+
+Release 1.1
+
+* Fixed: func_get_args fatal error in PHP < 5.3
+* Added: DaBase_Router as a names conventions class and DaBase_Getter's factory
+* Added: Support of custom getters classes extended from DaBase_Getter
+
+Release 1.0
+
+* All it was :)

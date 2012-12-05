@@ -1,6 +1,6 @@
 DaBase is a very simple and lightweight library for optimizing process of development projects on PHP > 5.3 and MySQL/PostgreSQL.
 
-There is a GIT clone of original <a href="http://code.google.com/p/dabase">DaBase</a>DaBase library hosted on Google Code SVN</a>.
+There is a GIT clone of original <a href="http://code.google.com/p/dabase">DaBaseDaBase library hosted on Google Code SVN</a>.
 
 <h2>Documentation</h2>
   * <a href="https://github.com/barbushin/dabase/wiki/User-Guide">User Guide</a>

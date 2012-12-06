@@ -3,8 +3,8 @@
 /**
  *
  * @desc There is example of creating PHAR archive of DaBase, so now it can be included in your project just like: require_once('phar://'.DABASE_PHAR_FILEPATH);
- * @see http://code.google.com/p/dabase
- * @author Barbushin Sergey http://www.linkedin.com/in/barbushin
+ * @see https://github.com/barbushin/dabase
+ * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 

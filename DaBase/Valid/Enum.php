@@ -3,7 +3,7 @@
 /**
  *
  * @desc Email validation rule
- * @author Barbushin Sergey http://www.linkedin.com/in/barbushin
+ * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 class DaBase_Valid_Enum extends DaBase_Valid_Rule {

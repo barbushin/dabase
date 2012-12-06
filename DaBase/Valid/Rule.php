@@ -3,7 +3,7 @@
 /**
  *
  * @desc Abstract validation rule
- * @author Barbushin Sergey http://www.linkedin.com/in/barbushin
+ * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 abstract class DaBase_Valid_Rule {

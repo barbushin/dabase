@@ -3,8 +3,8 @@
 /**
  *
  * @desc This class defines object models of database tables with validation support
- * @see http://code.google.com/p/dabase
- * @author Barbushin Sergey http://www.linkedin.com/in/barbushin
+ * @see https://github.com/barbushin/dabase
+ * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 class DaBase_Object {

@@ -3,7 +3,7 @@
 /**
  *
  * @desc This class defines Validator with set of rules
- * @author Barbushin Sergey http://www.linkedin.com/in/barbushin
+ * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 class DaBase_Validator {
@@ -100,7 +100,7 @@ class DaBase_Validator {
 /**
  *
  * @desc This is standart exception class for validation errors
- * @author Barbushin Sergey http://www.linkedin.com/in/barbushin
+ * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 class DaBase_Validator_Exception extends Exception {

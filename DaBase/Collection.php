@@ -3,8 +3,8 @@
 /**
  *
  * @desc This class provides access to database tables
- * @see http://code.google.com/p/dabase
- * @author Barbushin Sergey http://www.linkedin.com/in/barbushin
+ * @see https://github.com/barbushin/dabase
+ * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 class DaBase_Collection {
@@ -578,7 +578,7 @@ class DaBase_Collection {
 /**
  *
  * @desc This is exception of unkown objects requests
- * @author Barbushin Sergey http://www.linkedin.com/in/barbushin
+ * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 class DaBase_ObjectNotFound extends DaBase_Exception {

@@ -3,8 +3,8 @@
 /**
  *
  * @desc This class provides connection to data base, query preparing and fetching
- * @see http://code.google.com/p/dabase
- * @author Barbushin Sergey http://www.linkedin.com/in/barbushin
+ * @see https://github.com/barbushin/dabase
+ * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 abstract class DaBase_Connection {

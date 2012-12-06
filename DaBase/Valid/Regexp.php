@@ -3,7 +3,7 @@
 /**
  *
  * @desc String validation by RegExp pattern rule
- * @author Barbushin Sergey http://www.linkedin.com/in/barbushin
+ * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 class DaBase_Valid_Regexp extends DaBase_Valid_Rule {

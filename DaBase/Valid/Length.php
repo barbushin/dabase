@@ -3,7 +3,7 @@
 /**
  *
  * @desc String length validation rule
- * @author Barbushin Sergey http://www.linkedin.com/in/barbushin
+ * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 class DaBase_Valid_Length extends DaBase_Valid_Rule {

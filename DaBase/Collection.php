@@ -99,16 +99,6 @@ class DaBase_Collection {
 			$this->limit(1);
 		}
 		$result = $this->fetchPreparedQueryToObjects('SELECT ' . $this->db->quoteName($this->table) . '.* FROM ' . $this->db->quoteName($this->table) . $this->beforeWhere . $this->sqlWhere() . $this->sqlGroupBy() . $this->sqlOrderBy() . $this->sqlLimit(), $oneObject);
-
-		if($oneObject) {
-			if($result) {
-				$this->handleGetResult(array($result->id => $result));
-			}
-		}
-		else {
-			$this->handleGetResult($result);
-		}
-
 		$this->resetFilter();
 		return $result;
 	}
@@ -131,6 +121,7 @@ class DaBase_Collection {
 		}
 
 		$this->handleAppendersToObjects($objects);
+		$this->handleObjectsResult($objects);
 
 		if($oneObject) {
 			if(!$objects) {
@@ -176,7 +167,6 @@ class DaBase_Collection {
 			}
 			$founds[$row[$keyProperty]] = $row[$valueProperty];
 		}
-		$this->handleGetResult($founds);
 		$this->resetFilter();
 		return $founds;
 	}
@@ -189,14 +179,12 @@ class DaBase_Collection {
 		if(static::handlePropertiesOnRead) {
 			list($value) = $this->handlePropertiesOnRead(array($property => $value));
 		}
-		$this->handleGetResult($value);
 		$this->resetFilter();
 		return $value;
 	}
 
 	public function count() {
 		$count = (int)$this->db->fetchPreparedSql('SELECT COUNT(*) FROM ' . $this->db->quoteName($this->table) . $this->beforeWhere . $this->sqlWhere(), true, true);
-		$this->handleGetResult($count);
 		$this->resetFilter();
 		return $count;
 	}
@@ -391,14 +379,14 @@ class DaBase_Collection {
 		}
 	}
 
-	public function addPostGetHandler($callback) {
+	public function addObjectsResultHandler($callback) {
 		if(!is_callable($callback)) {
 			throw new Exception('Callable argument is required');
 		}
 		$this->postGetHandlers[] = $callback;
 	}
 
-	protected function handleGetResult($result) {
+	protected function handleObjectsResult(&$result) {
 		if($this->postGetHandlers) {
 			foreach($this->postGetHandlers as $callback) {
 				call_user_func($callback, $result);
@@ -582,5 +570,4 @@ class DaBase_Collection {
  *
  */
 class DaBase_ObjectNotFound extends DaBase_Exception {
-
 }

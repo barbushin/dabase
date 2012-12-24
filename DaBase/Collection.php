@@ -53,6 +53,7 @@ class DaBase_Collection {
 
 	public function setObjectsClass($objectsClass) {
 		$this->objectsClass = $objectsClass;
+		return $this;
 	}
 
 	protected function postInit() {
@@ -538,7 +539,7 @@ class DaBase_Collection {
 			$this->whereHasLastOperator = true;
 			return $this;
 		}
-		return $this->append($this->db->getRouter()->getCollectionByAlias($property, $this->db));
+		return $this->getProperty($property);
 	}
 
 	public function __set($property, $value) {
@@ -570,4 +571,5 @@ class DaBase_Collection {
  *
  */
 class DaBase_ObjectNotFound extends DaBase_Exception {
+
 }

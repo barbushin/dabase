@@ -85,7 +85,7 @@ class DaBase_Tree_Collection extends DaBase_Collection {
 		return $this->convertNodesArrayToTree($this->filterChildNodes($parentId, false, $limitLevel)->get());
 	}
 
-	protected function filterChildNodes($parentId = null, $withParent = false, $limitLevel = null) {
+	public function filterChildNodes($parentId = null, $withParent = false, $limitLevel = null) {
 		$limitLevel = (int)$limitLevel;
 
 		if(!$parentId) {

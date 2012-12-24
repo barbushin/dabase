@@ -13,7 +13,7 @@ class DaBase_Router {
 	public $baseObjectsClass = 'DaBase_Object';
 	public $ruleCollectionClass; // e.x. ucAllWords
 	public $ruleObjectsClass; // e.x. manyToOne|ucAllWords
-	public $ruleTableName = 'lcAllWords';
+	public $ruleTableName;
 	public $ruleJoinFieldName = 'manyToOne|ucNotFirstWords|Id';
 
 	protected static function classExists($class) {

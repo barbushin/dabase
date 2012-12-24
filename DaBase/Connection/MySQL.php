@@ -16,7 +16,7 @@ class DaBase_Connection_MySQL extends DaBase_Connection {
 	protected $charset = 'utf8';
 
 	protected function connect($host, $login, $password, $dbName, $persistent) {
-		$this->connection = $persistent ? @mysql_pconnect($host, $login, $password) : @mysql_connect($host, $login, $password);
+		$this->connection = $persistent ? @mysql_pconnect($host, $login, $password) : @mysql_connect($host, $login, $password, true);
 		if(!$this->connection) {
 			throw new DaBase_Exception('Could not connect: ' . mysql_error());
 		}

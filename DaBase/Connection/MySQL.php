@@ -85,7 +85,7 @@ class DaBase_Connection_MySQL extends DaBase_Connection {
 	}
 
 	protected function closeConnection() {
-		if($this->connection) {
+		if(is_resource($this->connection)) {
 			if($this->transactionsStarted) {
 				$this->rollback();
 			}

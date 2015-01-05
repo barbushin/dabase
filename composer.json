@@ -1,0 +1,32 @@
+{
+	"name": "dabase/dabase",
+	"description": "Lightweight pseudo-ORM for PHP.",
+	"keywords": ["PHP", "ORM", "database", "MySQL", "PostgreSQL"],
+	"homepage": "https://github.com/barbushin/dabase",
+	"license": "LGPL",
+	"type": "library",
+	"authors": [
+		{
+			"name": "Sergey Barbushin",
+			"homepage": "http://linkedin.com/in/barbushin",
+			"email": "barbushin@gmail.com"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/barbushin/dabase/issues?state=open"
+	},
+	"require": {
+		"php": ">=5.3.0"
+	},
+	"autoload": {
+		"psr-0": {
+			"DaBase": "src/"
+		}
+	},
+	"minimum-stability": "dev",
+	"extra": {
+		"branch-alias": {
+			"dev-master": "2.x-dev"
+		}
+	}
+}

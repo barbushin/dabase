@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase;
 
 /**
  *
@@ -7,10 +7,10 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Router {
+class Router {
 
-	public $baseCollectionsClass = 'DaBase_Collection';
-	public $baseObjectsClass = 'DaBase_Object';
+	public $baseCollectionsClass = 'Collection';
+	public $baseObjectsClass = 'Object';
 	public $ruleCollectionClass; // e.x. ucAllWords
 	public $ruleObjectsClass; // e.x. manyToOne|ucAllWords
 	public $ruleTableName;
@@ -24,7 +24,7 @@ class DaBase_Router {
 		}
 	}
 
-	public function getCollectionByAlias($alias, DaBase_Connection $db) {
+	public function getCollectionByAlias($alias, Connection $db) {
 		$inits = $this->getCachedInits($alias);
 		if($inits) {
 			list($collectionClass, $objectsClass, $table) = $inits;
@@ -33,13 +33,13 @@ class DaBase_Router {
 			$collectionClass = $this->getCollectionClass($alias);
 			$objectsClass = $this->getObjectsClass($alias, $collectionClass);
 			$table = $this->getTableName($alias, $collectionClass);
-			$this->setCachedInits($alias, array($collectionClass, $objectsClass, $table));
+			$this->setCachedInits($alias, [$collectionClass, $objectsClass, $table]);
 		}
 		return new $collectionClass($db, $alias, $table, $objectsClass);
 	}
 
 	/**************************************************************
-	ROUTS CACHE
+	 * ROUTS CACHE
 	 **************************************************************/
 
 	protected function setCachedInits($alias, $inits) {
@@ -51,7 +51,7 @@ class DaBase_Router {
 	}
 
 	/**************************************************************
-	ROUTS METHODS (GETTER -> OBJECT -> TABLE)
+	 * ROUTS METHODS (GETTER -> OBJECT -> TABLE)
 	 **************************************************************/
 
 	protected function getCollectionClass($alias) {
@@ -81,12 +81,12 @@ class DaBase_Router {
 		return $collectionClass::table ? $collectionClass::table : self::fetchNameByRule($alias, $this->ruleTableName);
 	}
 
-	public function getJoinFieldNameByCollection(DaBase_Collection $collection) {
+	public function getJoinFieldNameByCollection(Collection $collection) {
 		return self::fetchNameByRule($collection->getAlias(), $this->ruleJoinFieldName);
 	}
 
 	/**************************************************************
-	FETCHING NAMES BY RULES
+	 * FETCHING NAMES BY RULES
 	 **************************************************************/
 
 	public static function fetchNameByRule($name, $rulesString) {
@@ -94,27 +94,31 @@ class DaBase_Router {
 		$postfix = '';
 		foreach(explode('|', $rulesString) as $i => $rule) {
 			switch($rule) {
-				case 'manyToOne':
-					$name = preg_replace('/(e?s)([_A-Z]|$)/', '\\2', $name); // usersComments -> userComment OR users_comments -> user_comment
+				case 'manyToOne': // usersComments -> userComment OR users_comments -> user_comment
+					$name = preg_replace('/(e?s)([_A-Z]|$)/', '\\2', $name);
 					break;
-				case 'oneToMany':
-					$name = preg_replace('/ss([_A-Z]|$)/', 'ses\\1', preg_replace('/([A-Z_]|$)/', 's\\1', $name)); // userComment -> usersComments OR user_comment -> users_comments
+				case 'oneToMany': // userComment -> usersComments OR user_comment -> users_comments
+					$name = preg_replace('/ss([_A-Z]|$)/', 'ses\\1', preg_replace('/([A-Z_]|$)/', 's\\1', $name));
 					break;
-				case 'ucAllWords':
-					$name = preg_replace('/(^|_)(.)/e', 'strtoupper(\'\\2\')', $name); // userComment -> UserComment OR user_comment -> UserComment
+				case 'ucAllWords': // userComment -> UserComment OR user_comment -> UserComment
+					$name = preg_replace_callback('/(^|_)(.)/', function ($matches) {
+						return strtoupper($matches[2]);
+					}, $name);
 					break;
-				case 'ucNotFirstWords':
-					$name = preg_replace('/_(.)/e', 'strtoupper(\'\\1\')', $name); // UserComment -> userComment OR user_comment -> userComment
+				case 'ucNotFirstWords': // UserComment -> userComment OR user_comment -> userComment
+					$name = preg_replace_callback('/_(.)/', function ($matches) {
+						return strtoupper($matches[1]);
+					}, $name);
 					break;
-				case 'lcAllWords':
-					$name = strtolower(preg_replace('/(.)([A-Z])/', '\\1_\\2', $name)); // UserComment -> user_comment OR userComment -> user_comment
+				case 'lcAllWords': // UserComment -> user_comment OR userComment -> user_comment
+					$name = strtolower(preg_replace('/(.)([A-Z])/', '\\1_\\2', $name));
 					break;
 				default:
-					if($i) {
-						$postfix = $rule; // 'ucAllWords|Collection' : usersComments > UsersCommentsCollection
+					if($i) { // 'ucAllWords|Collection' : usersComments > UsersCommentsCollection
+						$postfix = $rule;
 					}
-					else {
-						$prefix = $rule; // 'Collection|ucAllWords' : usersComments > CollectionUsersComments
+					else { // 'Collection|ucAllWords' : usersComments > CollectionUsersComments
+						$prefix = $rule;
 					}
 			}
 		}

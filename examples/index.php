@@ -1,18 +1,14 @@
 <?php
 
-if(PHP_VERSION < 5.3) {
-	throw new Exception('DaBase require PHP version >= 5.3');
-}
-
-require_once ('config.php');
+require_once('config.php');
 
 /***************************************************************
-  Configure DaBase_Router
+  Configure DaBase\Router
  **************************************************************/
 
-$dbRouter = new DaBase_Router();
-$dbRouter->baseCollectionsClass = 'DaBase_Collection';
-$dbRouter->baseObjectsClass = 'DaBase_Object';
+$dbRouter = new DaBase\Router();
+$dbRouter->baseCollectionsClass = 'DaBase\Collection';
+$dbRouter->baseObjectsClass = 'DaBase\Object';
 $dbRouter->ruleCollectionClass = 'ucAllWords|Collection';
 $dbRouter->ruleObjectsClass = 'manyToOne|ucAllWords|Object';
 $dbRouter->ruleTableName = 'dabase_|lcAllWords';
@@ -26,8 +22,8 @@ echo '<pre><h1>Initialization</h1>';
 
 echo 'Connect to database.<br>';
 
-$db = new DaBase_Connection_MySQL(DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PERSISTANT, $dbRouter);
-$db->setCache(new DaBase_Cache());
+$db = new DaBase\Connection\MySQL(DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PERSISTANT, $dbRouter);
+$db->setCache(new DaBase\Cache());
 
 echo 'Init tables with some data.<br>';
 foreach(explode(';', file_get_contents('init_mysql.sql')) as $sql) {
@@ -38,15 +34,15 @@ foreach(explode(';', file_get_contents('init_mysql.sql')) as $sql) {
 
 // debug
 function debugSql($sql, $milisec) {
-	echo '<strong><font color="blue">' . $sql . '</font> [' . $milisec . ']</strong><br>';
+	echo '<strong style="color: blue">' . $sql . '</strong><br>';
 }
 $db->setDebugCallback('debugSql');
 
 /***************************************************************
-  DaBase_Connection query preparing and fetching
+  DaBase\Connection query preparing and fetching
  **************************************************************/
 
-echo '<h1>DaBase_Connection query preparing and fetching</h1>';
+echo '<h1>DaBase\Connection query preparing and fetching</h1>';
 
 ?>
 <h2>Query preparing</h2>
@@ -95,10 +91,10 @@ $cell = $db->fetchCell('SELECT COUNT(*) FROM dabase_users'); // to get array of 
 print_r($cell);
 
 /***************************************************************
-  DaBase_Collection basic features
+  DaBase\Collection basic features
  **************************************************************/
 
-echo '<h1>DaBase_Collection basic features</h1>';
+echo '<h1>DaBase\Collection basic features</h1>';
 echo '<h2>Selectors</h2>';
 
 echo '$db->users->get() <br>';
@@ -173,10 +169,10 @@ $db->users->login('sergey')->delete(); // DELETE FROM users WHERE login='sergey'
 
 
 /***************************************************************
-  DaBase_Collection appenders(pseudo-JOINS)
+  DaBase\Collection appenders(pseudo-JOINS)
  **************************************************************/
 
-echo '<h1>DaBase_Collection appenders(pseudo-JOINS)</h1>';
+echo '<h1>DaBase\Collection appenders(pseudo-JOINS)</h1>';
 
 echo '$db->users->orderBy(\'login\')->limit(2)
 ->append($db->videos->orderBy(\'id\'))
@@ -195,10 +191,10 @@ $users = $db->users->append($db->videos->orderByRand(), 'randomVideos', 'userId'
 print_r($users);
 
 /***************************************************************
-  Custom collections extended from DaBase_Collection
+  Custom collections extended from DaBase\Collection
  **************************************************************/
 
-echo '<h2>Custom collections extended from DaBase_Collection</h2>';
+echo '<h2>Custom collections extended from DaBase\Collection</h2>';
 
 echo '$db->rootUsers->get()<br>';
 $users = $db->rootUsers->get();
@@ -208,7 +204,7 @@ print_r($users);
   Database objects definition by class models with autovalidation
  **************************************************************/
 
-echo '<h1>Database objects definition by class models with autovalidation (DaBase_Object, Validator)</h1>';
+echo '<h1>Database objects definition by class models with autovalidation (DaBase\Object, Validator)</h1>';
 
 echo '<h2>Insert</h2>';
 ?>
@@ -245,44 +241,42 @@ $user = $db->users->login('johny')->get(true);
 $db->users->deleteObject($user);
 print_r($user);
 
-echo '<h1>Data models based on DaBase_Object</h1>';
+echo '<h1>Data models based on DaBase\Object</h1>';
 
 ?>
-class User extends DaBase_Object {
+class UserObject extends DaBase\Object {
 
 	public $login;
 	public $password;
 	public $posts;
 	public $isModerator;
 	public $isRoot;
+	public $isActive;
 
-	const validateOnInsert = true;
-	const validateOnUpdate = 'login,email';
-
-	protected function getValidator() {
-		$validator = new Validator_Set();
+	protected function initValidator() {
+		$validator = new \DaBase\Validator();
 
 		$validator->add('login', array(
-		new Validator_Rule_Required(),
-		new Validator_Rule_Length(3, 20),
-		new Validator_Rule_Regexp('/^[a-z\d]*$/ui')));
+		new DaBase\Valid\Required(),
+		new DaBase\Valid\Length(3, 20),
+		new DaBase\Valid\Regexp('/^[a-z\d]*$/ui')));
 
 		$validator->add('password', array(
-		new Validator_Rule_Required(),
-		new Validator_Rule_Regexp('/^[a-z\d]*$/ui'),
-		new Validator_Rule_Length(6, 50)));
+		new DaBase\Valid\Required(),
+		new DaBase\Valid\Regexp('/^[a-z\d]*$/ui'),
+		new DaBase\Valid\Length(6, 50)));
 
 		return $validator;
 	}
 }
 <?php
 
-echo '<h2>DaBase_Object validation</h2>';
+echo '<h2>DaBase\Object validation</h2>';
 ?>
 try {
   $db->users->getNew()->login('mike')->insert();
 }
-catch(DaBase_Validator_Exception $e) {
+catch(DaBase\Validator\Exception $e) {
   print_r($e->getErrors());
 }
 <?php
@@ -292,11 +286,11 @@ try {
 	$user->login = 'mike';
 	$db->users->insertObject($user);
 }
-catch(DaBase_Validator_Exception $e) {
+catch(DaBase\Validator_Exception $e) {
 	print_r($e->getErrors());
 }
 
-echo '<h2>DaBase_Object custom validation without exception throwing</h2>';
+echo '<h2>DaBase\Object custom validation without exception throwing</h2>';
 ?>
 $user = $db->users->getNew();
 $user->login = 'me';
@@ -311,10 +305,10 @@ if(!$user->validate('login,password', false)) {
 }
 
 /***************************************************************
-  DaBase_Tree_Collection features
+  DaBase\Tree\Collection features
  **************************************************************/
 
-echo '<h1>DaBase_Tree_Collection features</h1>';
+echo '<h1>DaBase\Tree\Collection features</h1>';
 
 echo '<h2>Create root node</h2>';
 ?>

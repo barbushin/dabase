@@ -1,18 +1,18 @@
-<?php
+<?php namespace DaBase\Tree;
 
 /**
  * @see https://github.com/barbushin/dabase
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Tree_Node extends DaBase_Object {
+class Node extends \DaBase\Object {
 
 	public $leftId;
 	public $rightId;
 	public $parentId;
 	public $level;
 
-	/** @var DaBase_Tree_Node[] */
+	/** @var Node[] */
 	public $_childNodes;
 
 	public function isLeaf() {

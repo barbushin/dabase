@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase;
 
 /**
  *
@@ -7,10 +7,10 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Object {
+class Object {
 
 	public $id;
-	/** @var DaBase_Validator|null */
+	/** @var Validator|null */
 	protected $__validator;
 
 	public function __construct(array $properties = array()) {
@@ -53,7 +53,7 @@ class DaBase_Object {
 	}
 
 	/**
-	 * @return DaBase_Validator
+	 * @return Validator
 	 */
 	public function getValidator() {
 		if(!$this->__validator) {

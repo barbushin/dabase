@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase\Valid;
 
 /**
  *
@@ -6,7 +6,7 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Valid_DateTime extends DaBase_Valid_Rule {
+class DateTime extends Rule {
 
 	protected $min;
 	protected $max;

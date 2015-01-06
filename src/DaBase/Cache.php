@@ -1,6 +1,6 @@
-<?php
+<?php namespace DaBase;
 
-class DaBase_Cache {
+class Cache {
 
 	protected $cache = array();
 	protected $cacheTags = array();

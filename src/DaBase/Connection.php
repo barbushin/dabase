@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase;
 
 /**
  *
@@ -7,7 +7,7 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-abstract class DaBase_Connection {
+abstract class Connection {
 
 	protected $dbName;
 	protected $router;
@@ -27,11 +27,11 @@ abstract class DaBase_Connection {
 	const PRE_EQUALS = ',=';
 	const PRE_AS_IS = '$';
 
-	public function __construct($host, $login, $password, $dbName, $persistent = false, DaBase_Router $router = null) {
+	public function __construct($host, $login, $password, $dbName, $persistent = false, Router $router = null) {
 		$this->connect($host, $login, $password, $dbName, $persistent);
 
 		if(!$router) {
-			$router = new DaBase_Router();
+			$router = new Router();
 		}
 		$this->router = $router;
 	}
@@ -60,7 +60,7 @@ abstract class DaBase_Connection {
 			if($this->transactionsStarted) {
 				$this->rollback();
 			}
-			throw new DaBase_Exception('SQL: ' . $preparedSql . ' FAILED WITH ERROR: ' . $this->getLastExecError());
+			throw new \DaBase\QueryFailed('SQL: ' . $preparedSql . ' FAILED WITH ERROR: ' . $this->getLastExecError());
 		}
 
 		if($updateCache) {
@@ -143,7 +143,7 @@ abstract class DaBase_Connection {
 
 	public function quote($string, $withQuotes = true) {
 		if((!is_scalar($string) && !is_null($string)) || (is_object($string) && !method_exists($string, '__toString'))) {
-			throw new DaBase_Exception('Trying to quote "' . gettype($string) . '". Value: "' . var_export($string, true) . '"');
+			throw new Exception('Trying to quote "' . gettype($string) . '". Value: "' . var_export($string, true) . '"');
 		}
 		if(is_bool($string)) {
 			$string = (int)$string;
@@ -168,10 +168,10 @@ abstract class DaBase_Connection {
 
 	public function quoteName($name) {
 		if(!is_scalar($name)) {
-			throw new DaBase_Exception('Trying to quote "' . gettype($name) . '" as name. Value: "' . var_export($name, true) . '"');
+			throw new Exception('Trying to quote "' . gettype($name) . '" as name. Value: "' . var_export($name, true) . '"');
 		}
 		if(!preg_match('/^[\d\w_]+$/', $name)) {
-			throw new DaBase_Exception('Wrong name "' . $name . '" given to quote');
+			throw new Exception('Wrong name "' . $name . '" given to quote');
 		}
 		return $this->quoteName . $name . $this->quoteName;
 	}
@@ -204,7 +204,7 @@ abstract class DaBase_Connection {
 
 		$splitedSql = preg_split('/(' . $preRegexp . ')/', $prepareSql, -1, PREG_SPLIT_DELIM_CAPTURE);
 		if(count($replacers) != (count($splitedSql) - 1) / 2) {
-			throw new DaBase_Exception('Count of replacers in prepare SQL "' . $prepareSql . '" mismatch');
+			throw new Exception('Count of replacers in prepare SQL "' . $prepareSql . '" mismatch');
 		}
 		if($replacers) {
 			$preparedSql = '';
@@ -290,7 +290,7 @@ abstract class DaBase_Connection {
 		$this->cacheDisabled++;
 	}
 
-	public function setCache(DaBase_Cache $cache) {
+	public function setCache(Cache $cache) {
 		$this->cache = $cache;
 	}
 
@@ -344,7 +344,7 @@ abstract class DaBase_Connection {
 
 	public function setDebugCallback($callback) {
 		if(!is_callable($callback)) {
-			throw new DaBase_Exception('Debug callback is not callable');
+			throw new Exception('Debug callback is not callable');
 		}
 		$this->debugCallback = $callback;
 	}
@@ -361,7 +361,7 @@ abstract class DaBase_Connection {
 
 	/**
 	 * @param string $collectionAlias
-	 * @return DaBase_Collection
+	 * @return Collection
 	 */
 	public function __get($collectionAlias) {
 		return $this->router->getCollectionByAlias($collectionAlias, $this);
@@ -385,7 +385,7 @@ abstract class DaBase_Connection {
 
 	public function commit() {
 		if(!$this->transactionsStarted) {
-			throw new DaBase_Exception('Trying to commit not existed transaction');
+			throw new Exception('Trying to commit not existed transaction');
 		}
 		$this->transactionsStarted--;
 		if(!$this->transactionsStarted) {
@@ -396,7 +396,7 @@ abstract class DaBase_Connection {
 
 	public function rollback() {
 		if(!$this->transactionsStarted) {
-			throw new DaBase_Exception('Trying to rollback not existed transaction');
+			throw new Exception('Trying to rollback not existed transaction');
 		}
 		$this->transactionsStarted = 0;
 		$this->exec('ROLLBACK');
@@ -409,3 +409,12 @@ abstract class DaBase_Connection {
 		$this->closeConnection();
 	}
 }
+
+class ConnectionFailed extends Exception {
+
+}
+
+class QueryFailed extends Exception {
+
+}
+

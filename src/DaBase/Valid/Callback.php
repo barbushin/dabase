@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase\Valid;
 
 /**
  *
@@ -6,14 +6,14 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Valid_Callback extends DaBase_Valid_Rule {
+class Callback extends Rule {
 
 	protected $callback;
 	protected $trueMeansValid;
 
 	function __construct($callback, $errorText = null, $trueMeansValid = true) {
 		if(!is_callable($callback)) {
-			throw new Exception('Argument must be callable');
+			throw new \DaBase\Exception('Argument must be callable');
 		}
 		$this->callback = $callback;
 		$this->trueMeansValid = $trueMeansValid;

@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase\Valid;
 
 /**
  *
@@ -6,7 +6,7 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Valid_Excluded extends DaBase_Valid_Rule {
+class Excluded extends Rule {
 
 	public static $defaultErrorText = 'required to be empty';
 

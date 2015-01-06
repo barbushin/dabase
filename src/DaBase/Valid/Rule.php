@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase\Valid;
 
 /**
  *
@@ -6,7 +6,7 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-abstract class DaBase_Valid_Rule {
+abstract class Rule {
 
 	public static $defaultErrorText = 'not valid';
 	protected $errorText;

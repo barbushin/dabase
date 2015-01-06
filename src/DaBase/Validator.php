@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase;
 
 /**
  *
@@ -6,7 +6,7 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Validator {
+class Validator {
 
 	protected $rules = array();
 	protected $errors = array();
@@ -63,7 +63,7 @@ class DaBase_Validator {
 		}
 
 		if($this->errors && $throwException) {
-			throw new DaBase_Validator_Exception($this->errors);
+			throw new Validator_Exception($this->errors);
 		}
 
 		return !$this->errors;
@@ -103,7 +103,7 @@ class DaBase_Validator {
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Validator_Exception extends Exception {
+class Validator_Exception extends Exception {
 
 	protected $errors = array();
 

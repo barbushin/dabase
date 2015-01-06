@@ -1,6 +1,6 @@
 <?php
 
-class RootUsersCollection extends DaBase_Collection {
+class RootUsersCollection extends DaBase\Collection {
 
 	const table = 'dabase_users';
 	const objectsClass = 'UserObject';

@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase\Connection;
 
 /**
  *
@@ -7,7 +7,7 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Connection_MySQL extends DaBase_Connection {
+class MySQL extends \DaBase\Connection {
 
 	protected $connection;
 
@@ -18,7 +18,7 @@ class DaBase_Connection_MySQL extends DaBase_Connection {
 	protected function connect($host, $login, $password, $dbName, $persistent) {
 		$this->connection = $persistent ? @mysql_pconnect($host, $login, $password) : @mysql_connect($host, $login, $password, true);
 		if(!$this->connection) {
-			throw new DaBase_Exception('Could not connect: ' . mysql_error());
+			throw new \DaBase\ConnectionFailed('Could not connect: ' . mysql_error());
 		}
 		$this->selectDb($dbName);
 		mysql_set_charset($this->charset, $this->connection);
@@ -37,7 +37,7 @@ class DaBase_Connection_MySQL extends DaBase_Connection {
 
 	protected function selectDb($dbName) {
 		if(!mysql_select_db($dbName, $this->connection)) {
-			throw new DaBase_Exception('Could not select DB: ' . $this->getLastExecError());
+			throw new \DaBase\ConnectionFailed('Could not select DB: ' . $this->getLastExecError());
 		}
 		$this->dbName = $dbName;
 	}

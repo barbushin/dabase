@@ -1,20 +1,20 @@
-<?php
+<?php namespace DaBase\Tree;
 
 /**
  * @see https://github.com/barbushin/dabase
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Tree_Collection extends DaBase_Collection {
+class Collection extends \DaBase\Collection {
 
 	const rootId = 1;
-	const objectsClass = 'DaBase_Tree_Node';
+	const objectsClass = 'DaBase\Tree\Node';
 
 	public function getRootId() {
 		return self::rootId;
 	}
 
-	public function addRootNode(DaBase_Tree_Node $node) {
+	public function addRootNode(Node $node) {
 		$this->db->begin();
 		$this->db->truncateTable($this->table);
 		$node->id = static::rootId;
@@ -26,7 +26,7 @@ class DaBase_Tree_Collection extends DaBase_Collection {
 		return $node;
 	}
 
-	public function addNode(DaBase_Tree_Node $node, $parentId = null, $checkId = true, $skipValidation = false) {
+	public function addNode(Node $node, $parentId = null, $checkId = true, $skipValidation = false) {
 		$parentNode = $this->getObjectById($parentId ? $parentId : $node->parentId);
 
 		$this->db->begin();
@@ -128,7 +128,7 @@ class DaBase_Tree_Collection extends DaBase_Collection {
 
 	/**
 	 * @param array $nodes
-	 * @return DaBase_Tree_Node[]
+	 * @return Node[]
 	 */
 	protected function convertNodesArrayToTree(array $nodes) {
 		$nodesTree = array();
@@ -173,11 +173,11 @@ class DaBase_Tree_Collection extends DaBase_Collection {
 	CRUD METHODS OVERRIDE
 	 **************************************************************/
 
-	public function insertObject(DaBase_Object $object, $checkId = true, $skipValidation = false) {
+	public function insertObject(\DaBase\Object $object, $checkId = true, $skipValidation = false) {
 		return $this->addNode($object, null, $checkId, $skipValidation);
 	}
 
-	public function deleteObject(DaBase_Object $object) {
+	public function deleteObject(\DaBase\Object $object) {
 		return $this->deleteNode($object->id);
 	}
 

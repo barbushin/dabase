@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase\Connection;
 
 /**
  *
@@ -7,7 +7,7 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Connection_PostgreSQL extends DaBase_Connection {
+class PostgreSQL extends \DaBase\Connection {
 
 	protected $connection;
 	protected $lastResult;
@@ -23,7 +23,7 @@ class DaBase_Connection_PostgreSQL extends DaBase_Connection {
 			$this->connection = pg_connect($connectionString);
 		}
 		if(!$this->connection) {
-			throw new DaBase_Exception('Unable connect to DB');
+			throw new \DaBase\ConnectionFailed('Unable connect to DB');
 		}
 	}
 

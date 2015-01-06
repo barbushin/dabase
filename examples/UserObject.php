@@ -1,6 +1,6 @@
 <?php
 
-class UserObject extends DaBase_Object {
+class UserObject extends DaBase\Object {
 	
 	public $login;
 	public $password;
@@ -10,17 +10,17 @@ class UserObject extends DaBase_Object {
 	public $isActive;
 	
 	protected function initValidator() {
-		$validator = new DaBase_Validator();
+		$validator = new \DaBase\Validator();
 		
 		$validator->add('login', array(
-		new DaBase_Valid_Required(), 
-		new DaBase_Valid_Length(3, 20), 
-		new DaBase_Valid_Regexp('/^[a-z\d]*$/ui')));
+		new DaBase\Valid\Required(), 
+		new DaBase\Valid\Length(3, 20), 
+		new DaBase\Valid\Regexp('/^[a-z\d]*$/ui')));
 		
 		$validator->add('password', array(
-		new DaBase_Valid_Required(), 
-		new DaBase_Valid_Regexp('/^[a-z\d]*$/ui'), 
-		new DaBase_Valid_Length(6, 50)));
+		new DaBase\Valid\Required(), 
+		new DaBase\Valid\Regexp('/^[a-z\d]*$/ui'), 
+		new DaBase\Valid\Length(6, 50)));
 		
 		return $validator;
 	}

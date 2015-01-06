@@ -1,6 +1,6 @@
 <?php
 
-class DirectoriesTreeCollection extends DaBase_Tree_Collection {
+class DirectoriesTreeCollection extends \DaBase\Tree\Collection {
 	
 	public $name;
 }

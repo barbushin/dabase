@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase;
 
 /**
  *
@@ -7,5 +7,5 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Exception extends Exception {
+class Exception extends \Exception {
 }

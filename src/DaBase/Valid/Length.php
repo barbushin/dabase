@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase\Valid;
 
 /**
  *
@@ -6,7 +6,7 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Valid_Length extends DaBase_Valid_Rule {
+class Length extends Rule {
 
 	public static $defaultErrorText = 'the length require to be from %minLength% to %maxLength% symbols';
 

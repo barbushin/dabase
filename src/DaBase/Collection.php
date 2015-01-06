@@ -1,4 +1,4 @@
-<?php
+<?php namespace DaBase;
 
 /**
  *
@@ -7,7 +7,7 @@
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_Collection {
+class Collection {
 
 	const table = null;
 	const objectsClass = null;
@@ -18,11 +18,11 @@ class DaBase_Collection {
 	protected static $statusProperties = array('whereParts', 'whereHasLastOperator', 'limit', 'offset', 'orderBy', 'groupBy', 'appenders', 'beforeWhere', 'postGetHandlers');
 
 	/**
-	 * @var DaBase_Connection
+	 * @var Connection
 	 */
 	protected $db;
 	/**
-	 * @var DaBase_Object
+	 * @var Object
 	 */
 	protected $objectsClass;
 	protected $skipNextFilterReset = 0;
@@ -40,7 +40,7 @@ class DaBase_Collection {
 	protected $postGetHandlers;
 	protected $appenders;
 
-	public function __construct(DaBase_Connection $db, $alias, $table, $objectsClass) {
+	public function __construct(Connection $db, $alias, $table, $objectsClass) {
 		$this->db = $db;
 		if(!$table || !$objectsClass) {
 			throw new Exception();
@@ -89,7 +89,7 @@ class DaBase_Collection {
 
 	/**
 	 * @param array $properties
-	 * @return DaBase_Object
+	 * @return Object
 	 */
 	public function getNew(array $properties = array()) {
 		return new $this->objectsClass($properties);
@@ -129,7 +129,7 @@ class DaBase_Collection {
 				return null;
 			}
 			elseif(count($objects) > 1) {
-				throw new DaBase_Exception('Request returns more than one object');
+				throw new Exception('Request returns more than one object');
 			}
 			return reset($objects);
 		}
@@ -139,8 +139,8 @@ class DaBase_Collection {
 	/**
 	 * @param $id
 	 * @param bool $throwExceptionIfNotFound
-	 * @return DaBase_Object|null
-	 * @throws DaBase_ObjectNotFound
+	 * @return Object|null
+	 * @throws ObjectNotFound
 	 */
 	public function getObjectById($id, $throwExceptionIfNotFound = true) {
 		return $this->filter('id', $id)->getObject($throwExceptionIfNotFound);
@@ -148,14 +148,14 @@ class DaBase_Collection {
 
 	/**
 	 * @param bool $throwExceptionIfNotFound
-	 * @return DaBase_Object|null
-	 * @throws DaBase_ObjectNotFound
+	 * @return Object|null
+	 * @throws ObjectNotFound
 	 */
 	public function getObject($throwExceptionIfNotFound = true) {
 		$whereParts = $this->whereParts;
 		$object = $this->get(true);
 		if(!$object && $throwExceptionIfNotFound) {
-			throw new DaBase_ObjectNotFound('Object not found in table "' . $this->table . '" by criteria: ' . print_r($whereParts, true));
+			throw new ObjectNotFound('Object not found in table "' . $this->table . '" by criteria: ' . print_r($whereParts, true));
 		}
 		return $object;
 	}
@@ -218,7 +218,7 @@ class DaBase_Collection {
 		return $this;
 	}
 
-	public function delete(DaBase_Object $object = null) {
+	public function delete(Object $object = null) {
 		if($object) {
 			return $this->deleteObject($object);
 		}
@@ -235,7 +235,7 @@ class DaBase_Collection {
 	OBJECT CRUD
 	 **************************************************************/
 
-	public function insertObject(DaBase_Object $object, $checkId = true, $skipValidation = false) {
+	public function insertObject(Object $object, $checkId = true, $skipValidation = false) {
 		if($checkId && !empty($object->id)) {
 			throw new Exception('Trying to make insert() of object with not empty "id"');
 		}
@@ -254,7 +254,7 @@ class DaBase_Collection {
 		return $object;
 	}
 
-	public function updateObject(DaBase_Object $object, $onlyNotNull = false) {
+	public function updateObject(Object $object, $onlyNotNull = false) {
 		$oldObject = $this->getObjectById($object->id);
 
 		$changedPropertiesValues = array();
@@ -274,7 +274,7 @@ class DaBase_Collection {
 		return $object;
 	}
 
-	public function deleteObject(DaBase_Object $object) {
+	public function deleteObject(Object $object) {
 		if(!$object->id) {
 			throw new Exception('Trying to delete object with empty "id"');
 		}
@@ -287,7 +287,7 @@ class DaBase_Collection {
 	APPENDING
 	 **************************************************************/
 
-	public function append(DaBase_Collection $collection, $appendProperty = null, $joinChildProperty = null, $joinParentProperty = 'id', $multiple = true, $keyProperty = null) {
+	public function append(Collection $collection, $appendProperty = null, $joinChildProperty = null, $joinParentProperty = 'id', $multiple = true, $keyProperty = null) {
 		if(!$appendProperty) {
 			$appendProperty = $collection->getAlias();
 		}
@@ -304,10 +304,10 @@ class DaBase_Collection {
 				list($collection, $appendProperty, $joinChildProperty, $joinParentProperty, $multiple, $keyProperty) = $appender;
 
 				/**
-				 * @var $collection DaBase_Collection
+				 * @var $collection Collection
 				 */
 				if($collection->getLimit() || $collection->getOffset()) {
-					throw new DaBase_Exception('Cannot append _collection with not empty limit or offset');
+					throw new Exception('Cannot append _collection with not empty limit or offset');
 				}
 				$attachProperty = '_' . $appendProperty;
 				$parentPropertyValuesAndObjectsIds = array();
@@ -547,14 +547,14 @@ class DaBase_Collection {
 	}
 
 	/**
-	 * @throws DaBase_Exception
+	 * @throws Exception
 	 * @param  $method
 	 * @param  $attributes
-	 * @return DaBase_Collection
+	 * @return Collection
 	 */
 	public function __call($method, $attributes) {
 		if(!$attributes) {
-			throw new DaBase_Exception('Unkown method "' . $method . '" requested');
+			throw new Exception('Unkown method "' . $method . '" requested');
 		}
 		return $this->filter($method, $attributes[0], count($attributes) > 1 ? $attributes[1] : '=');
 	}
@@ -570,6 +570,6 @@ class DaBase_Collection {
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
-class DaBase_ObjectNotFound extends DaBase_Exception {
+class ObjectNotFound extends Exception {
 
 }

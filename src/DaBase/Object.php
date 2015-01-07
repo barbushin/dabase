@@ -10,8 +10,6 @@
 class Object {
 
 	public $id;
-	/** @var Validator|null */
-	protected $__validator;
 
 	public function __construct(array $properties = array()) {
 		$this->setByArray($properties);
@@ -44,7 +42,7 @@ class Object {
 	}
 
 	/***************************************************************
-	VALIDATION
+	 * VALIDATION
 	 **************************************************************/
 
 	public function validate($properties = null, $throwException = true, $excludeProperties = null) {
@@ -56,10 +54,11 @@ class Object {
 	 * @return Validator
 	 */
 	public function getValidator() {
-		if(!$this->__validator) {
-			$this->__validator = $this->initValidator();
+		static $validator;
+		if(!$validator) {
+			$validator = $this->initValidator();
 		}
-		return $this->__validator;
+		return $validator;
 	}
 
 	protected function initValidator() {
@@ -67,11 +66,12 @@ class Object {
 	}
 
 	public function getValidationErrors() {
-		return $this->getValidator() ? $this->getValidator()->getErrors() : array();
+		$validator = $this->getValidator();
+		return $validator ? $validator->getErrors() : array();
 	}
 
 	/***************************************************************
-	MAGICS
+	 * MAGICS
 	 **************************************************************/
 
 	public function leaveFields(array $fields) {

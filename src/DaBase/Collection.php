@@ -236,7 +236,7 @@ class Collection {
 	 **************************************************************/
 
 	public function insertObject(Object $object, $checkId = true, $skipValidation = false) {
-		if($checkId && !empty($object->id)) {
+		if($checkId && $object->id) {
 			throw new Exception('Trying to make insert() of object with not empty "id"');
 		}
 		if(!$skipValidation) {
@@ -249,12 +249,14 @@ class Collection {
 			$propertiesValues = $this->handlePropertiesOnWrite($propertiesValues);
 		}
 
-		$this->db->exec($this->db->sqlInsert($this->table, $propertiesValues));
-		$object->id = $this->db->getLastInsertId();
+		$this->db->exec($this->db->getHelper()->sqlInsert($this->table, $propertiesValues));
+		if(!$object->id) {
+			$object->id = $this->db->getLastInsertId();
+		}
 		return $object;
 	}
 
-	public function updateObject(Object $object, $onlyNotNull = false) {
+	public function updateObject(Object $object) {
 		$oldObject = $this->getObjectById($object->id);
 
 		$changedPropertiesValues = array();
@@ -477,7 +479,7 @@ class Collection {
 	}
 
 	public function orderByRand() {
-		$this->orderBy[] = $this->db->sqlRandomFunction();
+		$this->orderBy[] = $this->db->getHelper()->sqlRandomFunction();
 		return $this;
 	}
 
@@ -520,7 +522,7 @@ class Collection {
 
 	protected function sqlLimit() {
 		if($this->limit || $this->offset) {
-			return ' ' . $this->db->sqlLimitOffset($this->limit, $this->offset);
+			return ' ' . $this->db->getHelper()->sqlLimitOffset($this->limit, $this->offset);
 		}
 		return '';
 	}

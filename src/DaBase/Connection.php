@@ -2,48 +2,91 @@
 
 /**
  *
- * @desc This class provides connection to data base, query preparing and fetching
+ * @desc This class provides connection to SQL databases by PDO driver, including query preparing and fetching
  * @see https://github.com/barbushin/dabase
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 abstract class Connection {
 
-	protected $dbName;
-	protected $router;
-	protected $quoteName = '`';
-	protected $quoteValue = '';
-	protected $transactionsStarted = 0;
-	protected $debugCallback;
-	protected $cache;
-	protected $cacheDisabled;
-
-	const PRE_NOT_QUOTED_VALUE = '!';
-	const PRE_NOT_QUOTED_VALUES = ',!';
-	const PRE_QUOTED_VALUE = '?';
-	const PRE_QUOTED_VALUES = ',?';
-	const PRE_NAME = '#';
-	const PRE_NAMES = ',#';
+	const PRE_NAME = '@';
+	const PRE_NAMES = ',@';
 	const PRE_EQUALS = ',=';
 	const PRE_AS_IS = '$';
+	const PRE_QUOTED_VALUE = '?';
+	const PRE_QUOTED_VALUES = ',?';
+	const PRE_NOT_QUOTED_VALUE = '??';
+	const PRE_NOT_QUOTED_VALUES = ',??';
 
-	public function __construct($host, $login, $password, $dbName, $persistent = false, Router $router = null) {
-		$this->connect($host, $login, $password, $dbName, $persistent);
+	/** @var Router */
+	protected $router;
+	/** @var \DaBase\Connection\Helper */
+	protected $helper;
+	/** @var  Cache */
+	protected $cache;
+	protected $host;
+	protected $port;
+	protected $dbName;
+	protected $user;
+	protected $password;
+	protected $charset;
+	protected $persistent;
+	protected $nameQuoteChar;
+	protected $valueQuoteChar;
+	protected $lastResult;
+	protected $transactionsStarted = 0;
+	protected $debugCallback;
+	protected $cacheDisabled;
+	protected $isConnected = false;
 
-		if(!$router) {
-			$router = new Router();
-		}
+
+	abstract protected function initConnection();
+
+	abstract protected function initHelper();
+
+	abstract protected function execQuery($preparedSql);
+
+	abstract protected function getLastExecError();
+
+	abstract protected function fetchNextRow($result);
+
+	abstract public function getLastInsertId();
+
+	public function __construct($host, $dbName, $user, $password = '', $persistent = false, $port = null, $charset = null) {
+		$this->host = $host;
+		$this->dbName = $dbName;
+		$this->user = $user;
+		$this->password = $password;
+		$this->charset = $charset;
+		$this->persistent = $persistent;
+		$this->helper = $this->initHelper();
+		$this->port = $port ?: $this->helper->getDefaultPort();
+		$this->nameQuoteChar = $this->helper->getNameQuoteChar();
+		$this->valueQuoteChar = $this->helper->getValueQuoteChar();
+	}
+
+	public function setRouter(Router $router) {
 		$this->router = $router;
 	}
 
-	public function setClientCharset($charset) {
-	}
-
 	public function getRouter() {
+		if(!$this->router) {
+			$this->router = new Router();
+		}
 		return $this->router;
 	}
 
-	abstract protected function connect($host, $dbName, $login, $password, $persistent);
+	public function getConnection() {
+		static $connection;
+		if(!$connection) {
+			$connection = $this->initConnection();
+		}
+		return $connection;
+	}
+
+	public function getHelper() {
+		return $this->helper;
+	}
 
 	public function query($prepareSql) {
 		$replacers = array_slice(func_get_args(), 1);
@@ -53,14 +96,16 @@ abstract class Connection {
 	public function exec($preparedSql, $updateCache = true) {
 		$start = microtime(true);
 		$result = $this->execQuery($preparedSql);
+		$this->lastResult = $result;
 		$time = (microtime(true) - $start) * 1000;
 
-		if(!$result) {
+		if($result === false) {
 			$this->debugSql($preparedSql, $time);
+			$error = $this->getLastExecError();
 			if($this->transactionsStarted) {
 				$this->rollback();
 			}
-			throw new \DaBase\QueryFailed('SQL: ' . $preparedSql . ' FAILED WITH ERROR: ' . $this->getLastExecError());
+			throw new \DaBase\QueryFailed('SQL: ' . $preparedSql . ' FAILED WITH ERROR: ' . $error);
 		}
 
 		if($updateCache) {
@@ -70,12 +115,6 @@ abstract class Connection {
 		$this->debugSql($preparedSql, $time);
 		return $result;
 	}
-
-	abstract protected function execQuery($preparedSql);
-
-	abstract protected function getLastExecError();
-
-	abstract protected function fetchNextRow($result);
 
 	public function fetchPreparedSql($preparedSql, $oneColumn = false, $oneRow = false, $keyValue = false) {
 		$sqlCacheKey = $preparedSql . '#' . (int)$oneColumn . (int)$oneRow;
@@ -138,7 +177,7 @@ abstract class Connection {
 	}
 
 	/**************************************************************
-	QUOTERS
+	 * QUOTES
 	 **************************************************************/
 
 	public function quote($string, $withQuotes = true) {
@@ -154,7 +193,7 @@ abstract class Connection {
 		elseif(is_numeric($string)) {
 			return $string;
 		}
-		return $withQuotes ? $this->quoteValue . $this->quoteString($string) . $this->quoteValue : $this->quoteString($string);
+		return $withQuotes ? $this->valueQuoteChar . $this->quoteString($string) . $this->valueQuoteChar : $this->quoteString($string);
 	}
 
 	abstract protected function quoteString($string);
@@ -170,10 +209,7 @@ abstract class Connection {
 		if(!is_scalar($name)) {
 			throw new Exception('Trying to quote "' . gettype($name) . '" as name. Value: "' . var_export($name, true) . '"');
 		}
-		if(!preg_match('/^[\d\w_]+$/', $name)) {
-			throw new Exception('Wrong name "' . $name . '" given to quote');
-		}
-		return $this->quoteName . $name . $this->quoteName;
+		return $this->nameQuoteChar . $name . $this->nameQuoteChar;
 	}
 
 	public function quoteNames(array $names) {
@@ -210,6 +246,7 @@ abstract class Connection {
 			$preparedSql = '';
 			foreach($splitedSql as $i => $p) {
 				if($i % 2) {
+					/** @var string $pos */
 					$pos = ($i - 1) / 2;
 					if($p == self::PRE_QUOTED_VALUE) {
 						$p = $this->quote($replacers[$pos]);
@@ -246,26 +283,26 @@ abstract class Connection {
 		$type = preg_match('/^\s*(\w+)/s', $sql, $m) ? strtolower($m[1]) : null;
 
 		if($type == 'select') {
-			if(preg_match('/[^' . $this->quoteName . $this->quoteValue . ']FROM\s*(,?\s*?' . $this->quoteName . '\w+' . $this->quoteName . '(\s+as\s+' . $this->quoteName . '\w+' . $this->quoteName . ')?)+/is', $sql, $m) && preg_match_all('/' . $this->quoteName . '(\w+)' . $this->quoteName . '(\s+as\s+' . $this->quoteName . '\w+' . $this->quoteName . ')?/is', $m[0], $m)) {
+			if(preg_match('/[^' . $this->nameQuoteChar . $this->valueQuoteChar . ']FROM\s*(,?\s*?' . $this->nameQuoteChar . '\w+' . $this->nameQuoteChar . '(\s+as\s+' . $this->nameQuoteChar . '\w+' . $this->nameQuoteChar . ')?)+/is', $sql, $m) && preg_match_all('/' . $this->nameQuoteChar . '(\w+)' . $this->nameQuoteChar . '(\s+as\s+' . $this->nameQuoteChar . '\w+' . $this->nameQuoteChar . ')?/is', $m[0], $m)) {
 				$tables = $m[1];
-				if(preg_match_all('/[^' . $this->quoteName . '\']JOIN\s*' . $this->quoteName . '(\w+)' . $this->quoteName . '/is', $sql, $m)) {
+				if(preg_match_all('/[^' . $this->nameQuoteChar . '\']JOIN\s*' . $this->nameQuoteChar . '(\w+)' . $this->nameQuoteChar . '/is', $sql, $m)) {
 					$tables = array_merge($tables, $m[1]);
 				}
 				return array('type' => $type, 'tables' => $tables);
 			}
 		}
 		elseif($type == 'insert') {
-			if(preg_match('/^INSERT\s+INTO\s+' . $this->quoteName . '(\w+)/is', $sql, $m)) {
+			if(preg_match('/^INSERT\s+INTO\s+' . $this->nameQuoteChar . '(\w+)/is', $sql, $m)) {
 				return array('type' => $type, 'table' => $m[1]);
 			}
 		}
 		elseif($type == 'update') {
-			if(preg_match('/^UPDATE\s+' . $this->quoteName . '(\w+)/is', $sql, $m)) {
+			if(preg_match('/^UPDATE\s+' . $this->nameQuoteChar . '(\w+)/is', $sql, $m)) {
 				return array('type' => $type, 'table' => $m[1]);
 			}
 		}
 		elseif($type == 'delete') {
-			if(preg_match('/^DELETE\s+FROM\s+' . $this->quoteName . '(\w+)/is', $sql, $m)) {
+			if(preg_match('/^DELETE\s+FROM\s+' . $this->nameQuoteChar . '(\w+)/is', $sql, $m)) {
 				return array('type' => $type, 'table' => $m[1]);
 			}
 		}
@@ -277,7 +314,7 @@ abstract class Connection {
 	}
 
 	/**************************************************************
-	CACHE
+	 * CACHE
 	 **************************************************************/
 
 	public function enableCache() {
@@ -317,30 +354,8 @@ abstract class Connection {
 	}
 
 	/**************************************************************
-	CUTOM METHODS
+	 * CUTOM METHODS
 	 **************************************************************/
-
-	abstract public function sqlInsert($table, array $data);
-
-	abstract public function sqlLimitOffset($limit, $offset = 0);
-
-	abstract public function sqlRandomFunction();
-
-	public function getLastInsertId() {
-		return mysql_insert_id($this->dbLink);
-	}
-
-	public function getTables() {
-		return $this->fetchColumn('SHOW TABLES');
-	}
-
-	public function truncateTable($tableName) {
-		return $this->query('TRUNCATE TABLE #', $tableName);
-	}
-
-	public function getTableFields($tableName) {
-		return $this->fetchColumn('SHOW FIELDS FROM ' . $this->quoteName($tableName));
-	}
 
 	public function setDebugCallback($callback) {
 		if(!is_callable($callback)) {
@@ -349,14 +364,14 @@ abstract class Connection {
 		$this->debugCallback = $callback;
 	}
 
-	protected function debugSql($sql, $milisec) {
+	protected function debugSql($sql, $milliseconds) {
 		if($this->debugCallback) {
-			call_user_func_array($this->debugCallback, array($sql, $milisec));
+			call_user_func_array($this->debugCallback, array($sql, $milliseconds));
 		}
 	}
 
 	/**************************************************************
-	GETTERS MAGICS AND ROUTER
+	 * GETTERS MAGICS AND ROUTER
 	 **************************************************************/
 
 	/**
@@ -364,20 +379,20 @@ abstract class Connection {
 	 * @return Collection
 	 */
 	public function __get($collectionAlias) {
-		return $this->router->getCollectionByAlias($collectionAlias, $this);
+		return $this->getRouter()->getCollectionByAlias($collectionAlias, $this);
 	}
 
 	public function __call($collectionAlias, $idInArray) {
-		return $this->router->getCollectionByAlias($collectionAlias, $this)->getObjectById(reset($idInArray));
+		return $this->getRouter()->getCollectionByAlias($collectionAlias, $this)->getObjectById(reset($idInArray));
 	}
 
 	/**************************************************************
-	TRANSACTIONS
+	 * TRANSACTIONS
 	 **************************************************************/
 
 	public function begin() {
 		if(!$this->transactionsStarted) {
-			$this->exec('BEGIN');
+			$this->transactionBegin();
 		}
 		$this->transactionsStarted++;
 		return $this;
@@ -389,7 +404,7 @@ abstract class Connection {
 		}
 		$this->transactionsStarted--;
 		if(!$this->transactionsStarted) {
-			$this->exec('COMMIT');
+			$this->transactionCommit();
 		}
 		return $this;
 	}
@@ -399,14 +414,20 @@ abstract class Connection {
 			throw new Exception('Trying to rollback not existed transaction');
 		}
 		$this->transactionsStarted = 0;
-		$this->exec('ROLLBACK');
+		$this->transactionRollback();
 		return $this;
 	}
 
-	abstract protected function closeConnection();
+	protected function transactionBegin() {
+		$this->exec('BEGIN');
+	}
 
-	public function __destruct() {
-		$this->closeConnection();
+	protected function transactionCommit() {
+		$this->exec('COMMIT');
+	}
+
+	protected function transactionRollback() {
+		$this->exec('ROLLBACK');
 	}
 }
 

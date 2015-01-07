@@ -14,10 +14,24 @@ class Collection extends \DaBase\Collection {
 		return self::rootId;
 	}
 
+	protected function fixQueryNameQuotes($sql) {
+		return str_replace('`', $this->db->getHelper()->getNameQuoteChar(), $sql);
+	}
+
+	/**
+	 * Proxy method required to fix PostgreSQL problem with lowercasing not quoted columns names
+	 * @param $prepareSql
+	 * @return mixed
+	 */
+	protected function query($prepareSql) {
+		$args = func_get_args();
+		$args[0] = $this->fixQueryNameQuotes($args[0]);
+		return call_user_func_array(array($this->db, 'query'), $args);
+	}
+
 	public function addRootNode(Node $node) {
 		$this->db->begin();
-		$this->db->truncateTable($this->table);
-		$node->id = static::rootId;
+		$this->db->getHelper()->truncateTable($this->table);
 		$node->leftId = 1;
 		$node->rightId = 2;
 		$node->level = 0;
@@ -27,11 +41,11 @@ class Collection extends \DaBase\Collection {
 	}
 
 	public function addNode(Node $node, $parentId = null, $checkId = true, $skipValidation = false) {
-		$parentNode = $this->getObjectById($parentId ? $parentId : $node->parentId);
+		$parentNode = $this->getObjectById($parentId !== null ? $parentId : $node->parentId);
 
 		$this->db->begin();
-		$this->db->query('UPDATE # SET leftId = leftId + 2, rightId = rightId + 2 WHERE leftId > ?', $this->table, $parentNode->rightId);
-		$this->db->query('UPDATE # SET rightId = rightId + 2 WHERE rightId >= ? AND leftId < ?', $this->table, $parentNode->rightId, $parentNode->rightId);
+		$this->query('UPDATE @ SET `leftId` = `leftId` + 2, `rightId` = `rightId` + 2 WHERE `leftId` > ?', $this->table, $parentNode->rightId);
+		$this->query('UPDATE @ SET `rightId` = `rightId` + 2 WHERE `rightId` >= ? AND `leftId` < ?', $this->table, $parentNode->rightId, $parentNode->rightId);
 
 		$node->parentId = $parentNode->id;
 		$node->leftId = $parentNode->rightId;
@@ -44,7 +58,7 @@ class Collection extends \DaBase\Collection {
 	}
 
 	public function isTreeValid() {
-		if(!$this->getByQuery('SELECT * FROM # WHERE leftId >= rightId', $this->table)) {
+		if(!$this->getByQuery($this->fixQueryNameQuotes('SELECT * FROM @ WHERE `leftId` >= `rightId`'), $this->table)) {
 			return false;
 		}
 	}
@@ -53,11 +67,11 @@ class Collection extends \DaBase\Collection {
 		$this->db->begin();
 		$node = $this->getObjectById($nodeId);
 
-		$this->db->query('DELETE FROM # WHERE leftId >= ? AND rightId <= ?', $this->table, $node->leftId, $node->rightId);
+		$this->query('DELETE FROM @ WHERE `leftId` >= ? AND `rightId` <= ?', $this->table, $node->leftId, $node->rightId);
 
 		$delDiff = $node->rightId - $node->leftId + 1;
-		$this->db->query('UPDATE # SET leftId = leftId - ?, rightId = rightId - ? WHERE leftId > ?', $this->table, $delDiff, $delDiff, $node->rightId);
-		$this->db->query('UPDATE # SET rightId = rightId - ? WHERE rightId > ? AND leftId < ?', $this->table, $delDiff, $node->rightId, $node->leftId);
+		$this->query('UPDATE @ SET `leftId` = `leftId` - ?, `rightId` = `rightId` - ? WHERE `leftId` > ?', $this->table, $delDiff, $delDiff, $node->rightId);
+		$this->query('UPDATE @ SET `rightId` = `rightId` - ? WHERE `rightId` > ? AND `leftId` < ?', $this->table, $delDiff, $node->rightId, $node->leftId);
 
 		$this->db->commit();
 		return $this;
@@ -106,7 +120,7 @@ class Collection extends \DaBase\Collection {
 		return $this;
 	}
 
-	// TODO: fix to allow using UNSIGNED leftId and rightId
+	// TODO: fix to allow using UNSIGNED `leftId` and rightId
 	public function moveNode($nodeId, $newParentId) {
 		$this->db->begin();
 		$node = $this->getObjectById($nodeId);
@@ -114,13 +128,13 @@ class Collection extends \DaBase\Collection {
 
 		$diffId = $node->rightId - $node->leftId + 1;
 
-		$this->db->query('UPDATE # SET leftId = 0-(leftId), rightId = 0-(rightId) WHERE leftId >= ? AND rightId <= ?', $this->table, $node->leftId, $node->rightId);
-		$this->db->query('UPDATE # SET leftId = leftId - ? WHERE leftId > ?', $this->table, $diffId, $node->rightId);
-		$this->db->query('UPDATE # SET rightId = rightId - ? WHERE rightId > ?', $this->table, $diffId, $node->rightId);
-		$this->db->query('UPDATE # SET leftId = leftId + ? WHERE leftId >= ?', $this->table, $diffId, $newParentNode->rightId > $node->rightId ? $newParentNode->rightId - $diffId : $newParentNode->rightId);
-		$this->db->query('UPDATE # SET rightId = rightId + ? WHERE rightId >= ?', $this->table, $diffId, $newParentNode->rightId > $node->rightId ? $newParentNode->rightId - $diffId : $newParentNode->rightId);
-		$this->db->query('UPDATE # SET leftId = 0-(leftId) + ?, rightId = 0-(rightId) + ?, level = level + ' . ($newParentNode->level - $node->level + 1) . ' WHERE leftId <= ? AND rightId >= ?', $this->table, $newParentNode->rightId > $node->rightId ? $newParentNode->rightId - $node->rightId - 1 : $newParentNode->rightId - $node->rightId - 1 + $diffId, $newParentNode->rightId > $node->rightId ? $newParentNode->rightId - $node->rightId - 1 : $newParentNode->rightId - $node->rightId - 1 + $diffId, 0 - $node->leftId, 0 - $node->rightId);
-		$this->db->query('UPDATE # SET parentId = "' . $newParentNode->id . '" WHERE id="' . $node->id . '"', $this->table);
+		$this->query('UPDATE @ SET `leftId` = 0-(`leftId`), `rightId` = 0-(`rightId`) WHERE `leftId` >= ? AND `rightId` <= ?', $this->table, $node->leftId, $node->rightId);
+		$this->query('UPDATE @ SET `leftId` = `leftId` - ? WHERE `leftId` > ?', $this->table, $diffId, $node->rightId);
+		$this->query('UPDATE @ SET `rightId` = `rightId` - ? WHERE `rightId` > ?', $this->table, $diffId, $node->rightId);
+		$this->query('UPDATE @ SET `leftId` = `leftId` + ? WHERE `leftId` >= ?', $this->table, $diffId, $newParentNode->rightId > $node->rightId ? $newParentNode->rightId - $diffId : $newParentNode->rightId);
+		$this->query('UPDATE @ SET `rightId` = `rightId` + ? WHERE `rightId` >= ?', $this->table, $diffId, $newParentNode->rightId > $node->rightId ? $newParentNode->rightId - $diffId : $newParentNode->rightId);
+		$this->query('UPDATE @ SET `leftId` = 0-(`leftId`) + ?, `rightId` = 0-(`rightId`) + ?, level = level + ' . ($newParentNode->level - $node->level + 1) . ' WHERE `leftId` <= ? AND `rightId` >= ?', $this->table, $newParentNode->rightId > $node->rightId ? $newParentNode->rightId - $node->rightId - 1 : $newParentNode->rightId - $node->rightId - 1 + $diffId, $newParentNode->rightId > $node->rightId ? $newParentNode->rightId - $node->rightId - 1 : $newParentNode->rightId - $node->rightId - 1 + $diffId, 0 - $node->leftId, 0 - $node->rightId);
+		$this->query('UPDATE @ SET `parentId` = ? WHERE id=?', $this->table, $newParentNode->id, $node->id);
 
 		$this->db->commit();
 		return $this;
@@ -170,7 +184,7 @@ class Collection extends \DaBase\Collection {
 	}
 
 	/**************************************************************
-	CRUD METHODS OVERRIDE
+	 * CRUD METHODS OVERRIDE
 	 **************************************************************/
 
 	public function insertObject(\DaBase\Object $object, $checkId = true, $skipValidation = false) {

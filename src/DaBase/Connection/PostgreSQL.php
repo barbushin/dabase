@@ -2,38 +2,35 @@
 
 /**
  *
- * @desc This class provides connection to data base, query preparing and fetching
+ * @desc This class provides connection with PostgreSQL using http://php.net/pgsql
  * @see https://github.com/barbushin/dabase
  * @author Barbushin Sergey http://linkedin.com/in/barbushin
  *
  */
 class PostgreSQL extends \DaBase\Connection {
 
-	protected $connection;
-	protected $lastResult;
-	protected $quoteName = '"';
-	protected $quoteValue = '\'';
+	protected function initConnection() {
+		$path = "host={$this->host} dbname={$this->dbName} user={$this->user} password={$this->password} port={$this->port}";
+		$connection = $this->persistent ? @pg_pconnect($path) : @pg_connect($path);
+		if(!$connection) {
+			throw new \DaBase\ConnectionFailed("Connection to {$this->host}:{$this->port}/{$this->dbName} failed with error: " . mysql_error());
+		}
+		if($this->charset) {
+			pg_set_client_encoding($connection, $this->charset);
+		}
+		return $connection;
+	}
 
-	protected function connect($host, $login, $password, $dbName, $persistent) {
-		$connectionString = "host=$host dbname=$dbName user=$login password=$password";
-		if($persistent) {
-			$this->connection = pg_pconnect($connectionString);
-		}
-		else {
-			$this->connection = pg_connect($connectionString);
-		}
-		if(!$this->connection) {
-			throw new \DaBase\ConnectionFailed('Unable connect to DB');
-		}
+	protected function initHelper() {
+		return new Helper\PostgreSQL($this);
 	}
 
 	protected function execQuery($preparedSql) {
-		$this->lastResult = @pg_query($this->connection, $preparedSql);
-		return $this->lastResult;
+		return @pg_query($this->getConnection(), $preparedSql);
 	}
 
 	protected function getLastExecError() {
-		return pg_last_error($this->connection);
+		return pg_result_error($this->lastResult) ? : pg_last_error($this->getConnection());
 	}
 
 	protected function fetchNextRow($result) {
@@ -45,39 +42,11 @@ class PostgreSQL extends \DaBase\Connection {
 	}
 
 	public function getLastInsertId() {
-		return pg_last_oid($this->lastResult);
-	}
-
-	// TODO: check
-	public function getTables() {
-		return $this->fetchColumn('SHOW TABLES');
-	}
-
-	// TODO: check
-	public function getTableFields($tableName) {
-		return $this->fetchColumn('SHOW FIELDS FROM ' . $this->quoteName($tableName));
-	}
-
-	public function sqlLimitOffset($limit, $offset = 0) {
-		$limit = (int)$limit;
-		$offset = (int)$offset;
-		return 'LIMIT ' . $limit . ($offset ? ' OFFSET ' . $offset : '');
-	}
-
-	public function sqlRandomFunction() {
-		return 'RANDOM()';
-	}
-
-	public function sqlInsert($table, array $data) {
-		return 'INSERT INTO ' . $this->quoteName($table) . ($data ? ' (' . implode(', ', $this->quoteNames(array_keys($data))) . ') VALUES (' . implode(', ', $this->quoteArray($data)) . ')' : ' VALUES()');
-	}
-
-	protected function closeConnection() {
-		if($this->connection) {
-			if($this->transactionStarted) {
-				$this->rollback();
-			}
-			pg_close($this->connection);
+		$lastId = pg_last_oid($this->lastResult);
+		if(!$lastId) {
+			$resultRow = $this->fetchNextRow($this->lastResult);
+			$lastId = $resultRow['id'];
 		}
+		return  $lastId;
 	}
 }

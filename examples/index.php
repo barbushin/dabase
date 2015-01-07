@@ -2,31 +2,26 @@
 
 require_once('config.php');
 
-/***************************************************************
-  Configure DaBase\Router
- **************************************************************/
-
-$dbRouter = new DaBase\Router();
-$dbRouter->baseCollectionsClass = 'DaBase\Collection';
-$dbRouter->baseObjectsClass = 'DaBase\Object';
-$dbRouter->ruleCollectionClass = 'ucAllWords|Collection';
-$dbRouter->ruleObjectsClass = 'manyToOne|ucAllWords|Object';
-$dbRouter->ruleTableName = 'dabase_|lcAllWords';
-$dbRouter->ruleJoinFieldName = 'manyToOne|ucNotFirstWords|Id';
 
 /***************************************************************
   Init connection and base structure
  **************************************************************/
 
 echo '<pre><h1>Initialization</h1>';
-
 echo 'Connect to database.<br>';
 
-$db = new DaBase\Connection\MySQL(DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PERSISTANT, $dbRouter);
+$class = DB_CONNECTION_CLASS;
+/** @var DaBase\Connection $db */
+if(strpos($class, 'PDO')) {
+	$db = new $class(DB_TYPE, DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PERSISTENT);
+}
+else {
+	$db = new $class(DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PERSISTENT);
+}
 $db->setCache(new DaBase\Cache());
 
 echo 'Init tables with some data.<br>';
-foreach(explode(';', file_get_contents('init_mysql.sql')) as $sql) {
+foreach(explode(';', file_get_contents('init_'.DB_TYPE.'.sql')) as $sql) {
 	if(trim($sql, " \n\r")) {
 		$db->exec($sql);
 	}
@@ -37,6 +32,19 @@ function debugSql($sql, $milisec) {
 	echo '<strong style="color: blue">' . $sql . '</strong><br>';
 }
 $db->setDebugCallback('debugSql');
+
+/***************************************************************
+  Configure DaBase\Router
+ **************************************************************/
+
+$router = new DaBase\Router();
+$router->baseCollectionsClass = 'DaBase\Collection';
+$router->baseObjectsClass = 'DaBase\Object';
+$router->ruleCollectionClass = 'ucAllWords|Collection';
+$router->ruleObjectsClass = 'manyToOne|ucAllWords|Object';
+$router->ruleTableName = 'dabase_|lcAllWords';
+$router->ruleJoinFieldName = 'manyToOne|ucNotFirstWords|Id';
+$db->setRouter($router);
 
 /***************************************************************
   DaBase\Connection query preparing and fetching
@@ -50,13 +58,13 @@ $isActive = true;
 $sets = array('isModerator' => true, 'isRoot' => false);
 $usersIds = array(1, 2, 3);
 
-$result = $db->query('UPDATE users SET ,= WHERE id IN (,?) AND #=?', $sets, $usersIds, 'isActive', $isActive);
+$result = $db->query('UPDATE users SET ,= WHERE id IN (,?) AND @ = ?', $sets, $usersIds, 'isActive', $isActive);
 <?php
 $isActive = true;
 $sets = array('isModerator' => true, 'isRoot' => false);
 $usersIds = array(1, 2, 3);
 
-$result = $db->query('UPDATE dabase_users SET ,= WHERE id IN (,?) AND #=?', $sets, $usersIds, 'isActive', $isActive);
+$result = $db->query('UPDATE dabase_users SET ,= WHERE id IN (,?) AND @ = ?', $sets, $usersIds, 'isActive', $isActive);
 ?>
 <h2>Query fetching</h2>
 $rows = $db->fetch('SELECT * FROM users LIMIT 2'); // to get result as array of all rows and columns
@@ -103,7 +111,7 @@ print_r($users);
 
 echo '<br>';
 echo '$db->users->getByQuery(...) <br>';
-$users = $db->users->getByQuery('SELECT * FROM # WHERE #=? LIMIT 2', $db->users->getTable(), 'isActive', $isActive); // get array of all rows like objects
+$users = $db->users->getByQuery('SELECT * FROM @ WHERE @ = ? LIMIT 2', $db->users->getTable(), 'isActive', $isActive); // get array of all rows like objects
 print_r($users);
 
 echo '<br>';

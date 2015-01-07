@@ -15,6 +15,9 @@ class Router {
 	public $ruleObjectsClass; // e.x. manyToOne|ucAllWords
 	public $ruleTableName;
 	public $ruleJoinFieldName = 'manyToOne|ucNotFirstWords|Id';
+	/** @var Collection[] */
+	public $cachedInits = array();
+	public $cachedCollection = array();
 
 	protected static function classExists($class) {
 		try {
@@ -24,6 +27,11 @@ class Router {
 		}
 	}
 
+	/**
+	 * @param $alias
+	 * @param Connection $db
+	 * @return Collection
+	 */
 	public function getCollectionByAlias($alias, Connection $db) {
 		$inits = $this->getCachedInits($alias);
 		if($inits) {
@@ -33,7 +41,7 @@ class Router {
 			$collectionClass = $this->getCollectionClass($alias);
 			$objectsClass = $this->getObjectsClass($alias, $collectionClass);
 			$table = $this->getTableName($alias, $collectionClass);
-			$this->setCachedInits($alias, [$collectionClass, $objectsClass, $table]);
+			$this->setCachedInits($alias, array($collectionClass, $objectsClass, $table));
 		}
 		return new $collectionClass($db, $alias, $table, $objectsClass);
 	}

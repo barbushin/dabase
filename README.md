@@ -17,6 +17,10 @@ DaBase is a very flexible, simple and lightweight pseudo ORM for PHP.
 * Minimalistic collections filters `$db->users->age(27, '<')->isActive(true)->orderBy('age')->get()`
 * Nested sets implemented interface
 
+## Documentation & Examples
+
+See http://php-console.com/dabase
+
 ## Recommendations
  * Google Chrome extension [PHP Console](https://chrome.google.com/webstore/detail/php-console/nfhmhhlpfleoednkpnnnkolmclajemef).
  * Google Chrome extension [JavaScript Errors Notifier](https://chrome.google.com/webstore/detail/javascript-errors-notifie/jafmfknfnkoekkdocjiaipcnmkklaajd).

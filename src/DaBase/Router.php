@@ -9,8 +9,8 @@
  */
 class Router {
 
-	public $baseCollectionsClass = 'Collection';
-	public $baseObjectsClass = 'Object';
+	public $baseCollectionsClass = 'DaBase\Collection';
+	public $baseObjectsClass = 'DaBase\Object';
 	public $ruleCollectionClass; // e.x. ucAllWords
 	public $ruleObjectsClass; // e.x. manyToOne|ucAllWords
 	public $ruleTableName;

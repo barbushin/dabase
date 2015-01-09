@@ -11,9 +11,9 @@ class Router {
 
 	public $baseCollectionsClass = 'DaBase\Collection';
 	public $baseObjectsClass = 'DaBase\Object';
-	public $ruleCollectionClass; // e.x. ucAllWords
-	public $ruleObjectsClass; // e.x. manyToOne|ucAllWords
-	public $ruleTableName;
+	public $ruleCollectionClass = 'ucAllWords|Collection'; // e.x. ucAllWords
+	public $ruleObjectsClass = 'ucAllWords|Object'; // e.x. manyToOne|ucAllWords
+	public $ruleTableName = 'lcAllWords';
 	public $ruleJoinFieldName = 'manyToOne|ucNotFirstWords|Id';
 	/** @var Collection[] */
 	public $cachedInits = array();
